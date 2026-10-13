@@ -46,6 +46,7 @@
     img{display:block;max-width:100%}
     .wrap{max-width:var(--w);margin:0 auto;padding:0 22px}
     h1,h2,.display{font-family:'Anton',sans-serif;font-weight:400;letter-spacing:.01em;text-transform:uppercase;line-height:1.02}
+    h2{line-height:1.12}
     a{color:inherit}
     :focus-visible{outline:3px solid var(--fiber);outline-offset:2px;border-radius:4px}
 
@@ -117,7 +118,23 @@
 
     /* ── služby ────────────────────────────────────────── */
     .services{background:var(--off);border-bottom:3px solid var(--ink)}
-    .grid{margin-top:38px;display:grid;grid-template-columns:repeat(4,1fr);gap:26px}
+    .slider{position:relative;margin-top:38px}
+    .slider .grid{
+      display:flex;gap:26px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;
+      padding-bottom:4px;margin-top:0;-ms-overflow-style:none;scrollbar-width:none;
+    }
+    .slider .grid::-webkit-scrollbar{display:none}
+    .slider .grid .card{flex:0 0 calc(25% - 19.5px);scroll-snap-align:start}
+    .slider .arrow{
+      position:absolute;top:calc(50% - 10px);transform:translateY(-50%);
+      width:46px;height:46px;border-radius:50%;background:#fff;border:3px solid var(--ink);
+      box-shadow:3px 3px 0 var(--ink);display:flex;align-items:center;justify-content:center;
+      font-size:22px;font-weight:800;line-height:1;cursor:pointer;z-index:2;
+      transition:transform .1s ease,box-shadow .1s ease;
+    }
+    .slider .arrow:hover{transform:translateY(-50%) translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+    .slider .arrow.prev{left:-23px}
+    .slider .arrow.next{right:-23px}
     .card{display:flex;flex-direction:column;overflow:hidden}
     .card .imgbox{border-bottom:3px solid var(--ink);aspect-ratio:1/1;overflow:hidden;background:#fff}
     .card .imgbox img{width:100%;height:100%;object-fit:cover;object-position:top;transition:transform .25s ease}
@@ -172,7 +189,7 @@
     footer .note{grid-column:1/-1;margin-top:14px;font-size:13px;color:#8A8F9B}
 
     @media (max-width:960px){
-      .grid{grid-template-columns:repeat(2,1fr)}
+      .slider .grid .card{flex:0 0 calc(50% - 13px)}
       .hero .wrap,.band .wrap,.lead-section .cols{grid-template-columns:1fr}
       .heroimg{order:-1}
       .bubble{left:auto;right:6px}
@@ -180,7 +197,7 @@
       footer .wrap{grid-template-columns:1fr}
     }
     @media (max-width:560px){
-      .grid{grid-template-columns:1fr}
+      .slider .grid .card{flex:0 0 85%}
       .topbar nav .btn{display:none}
     }
     @media (prefers-reduced-motion:reduce){
@@ -239,7 +256,10 @@
       <h2>Superschopnosti pro váš dům. Jedna poptávka.</h2>
       <p class="lead">Vyberte, co potřebujete – ozveme se do 24 hodin s termínem a cenou. Vše řeší jeden tým, takže internet, kamery i elektriku zapojíme klidně na jednu návštěvu.</p>
 
-      <div class="grid">
+      <div class="slider">
+        <button class="arrow prev" type="button" aria-label="Předchozí služby">&#8249;</button>
+        <button class="arrow next" type="button" aria-label="Další služby">&#8250;</button>
+        <div class="grid">
         <article class="card panel">
           <div class="imgbox"><img src="sluzba-internet.jpg" alt="Turbomen s mesh jednotkami a serverem – rychlý internet" loading="lazy"></div>
           <div class="body">
@@ -284,6 +304,7 @@
             <button class="btn" type="button" data-sluzba="Televize">Poptat televizi</button>
           </div>
         </article>
+        </div>
       </div>
     </div>
   </section>
@@ -422,6 +443,19 @@
     // fetch(f.action, {method:'POST', body:data});
     f.querySelector('button[type=submit]').disabled = true;
     document.getElementById('ok').style.display = 'block';
+  });
+
+  // Posuvník služeb: šipky posouvají o šířku jedné karty.
+  document.querySelectorAll('.slider').forEach(function(slider){
+    var track = slider.querySelector('.grid');
+    var prev = slider.querySelector('.arrow.prev');
+    var next = slider.querySelector('.arrow.next');
+    function step(){
+      var card = track.querySelector('.card');
+      return card ? card.getBoundingClientRect().width + 26 : track.clientWidth;
+    }
+    prev.addEventListener('click', function(){ track.scrollBy({left:-step(), behavior:'smooth'}); });
+    next.addEventListener('click', function(){ track.scrollBy({left:step(), behavior:'smooth'}); });
   });
 </script>
 </body>
