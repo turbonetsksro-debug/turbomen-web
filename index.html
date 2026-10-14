@@ -226,7 +226,6 @@
   <section class="hero halftone">
     <div class="wrap">
       <div>
-        <span class="eyebrow">Váš technik pro Uherskobrodsko</span>
         <h1>Zavoláte.<br>Přiletí.<br><span class="r">Zapojí.</span></h1>
         <p class="sub">Turbomen je parta místních techniků, která vyřeší rychlý internet, kamery, elektriku i Wi-Fi po celém domě. Bez čekání na „technické okno“ velkých operátorů.</p>
         <div class="ctas">
@@ -367,15 +366,14 @@
           </div>
         </div>
 
-        <!-- FORMULÁŘ: odesílá se přes FormSubmit.co na info@turbonet.cz (bez vlastního backendu).
-             Při prvním odeslání FormSubmit pošle na info@turbonet.cz aktivační e-mail s potvrzovacím
-             odkazem – dokud ho někdo s přístupem do té schránky neklikne, zprávy se nedoručí.
-             Konverze: událost "lead_odeslan_turbomen" v dataLayer – navěste na ni značku v GTM. -->
-        <form class="form panel" id="lead" method="post" action="https://formsubmit.co/ajax/info@turbonet.cz">
-          <input type="hidden" name="_subject" value="Nová poptávka z turbomen.cz">
-          <input type="hidden" name="_template" value="table">
-          <input type="hidden" name="_captcha" value="false">
-          <input type="text" name="_honey" style="display:none" tabindex="-1" autocomplete="off">
+        <!-- FORMULÁŘ: odesílá se přes Web3Forms na e-mail, ke kterému patří access_key
+             (klíč zdarma na https://web3forms.com – zadá se info@turbonet.cz, klíč přijde mailem).
+             Konverze: událost "lead_odeslan_turbomen" v dataLayer – jen po úspěšném odeslání. -->
+        <form class="form panel" id="lead" method="post" action="https://api.web3forms.com/submit">
+          <input type="hidden" name="access_key" value="9c1599dd-0afd-4fb0-ba75-9694ec23415e">
+          <input type="hidden" name="subject" value="Nová poptávka z turbomen.cz">
+          <input type="hidden" name="from_name" value="turbomen.cz">
+          <input type="checkbox" name="botcheck" style="display:none" tabindex="-1" autocomplete="off">
           <label for="jmeno">Jméno</label>
           <input id="jmeno" name="jmeno" type="text" autocomplete="name" required>
 
@@ -441,14 +439,19 @@
   // Odeslání poptávky: zapíše konverzi do dataLayer pro GTM a zobrazí potvrzení.
   document.getElementById('lead').addEventListener('submit', function(e){
     e.preventDefault();
-    var f = e.target, data = new FormData(f);
-    window.dataLayer = window.dataLayer || [];
-    window.dataLayer.push({event:'lead_odeslan_turbomen', sluzba:data.get('sluzba'), obec:data.get('obec')});
-    f.querySelector('button[type=submit]').disabled = true;
+    var f = e.target, data = new FormData(f), btn = f.querySelector('button[type=submit]');
+    btn.disabled = true;
     fetch(f.action, {method:'POST', headers:{'Accept':'application/json'}, body:data})
-      .then(function(){ document.getElementById('ok').style.display = 'block'; })
+      .then(function(r){ return r.json(); })
+      .then(function(res){
+        if (!res.success) throw new Error(res.message);
+        window.dataLayer = window.dataLayer || [];
+        window.dataLayer.push({event:'lead_odeslan_turbomen', sluzba:data.get('sluzba'), obec:data.get('obec')});
+        f.reset();
+        document.getElementById('ok').style.display = 'block';
+      })
       .catch(function(){
-        f.querySelector('button[type=submit]').disabled = false;
+        btn.disabled = false;
         alert('Poptávku se nepodařilo odeslat, zkuste to prosím znovu nebo zavolejte na 775 570 530.');
       });
   });
